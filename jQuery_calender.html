@@ -1,0 +1,98 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title>jQuery calendar</title>
+        <meta charset="UTF-8">
+        <script type="Text/JavaScript" src="http://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"> 
+        </script>
+    </head>
+<body>
+
+<div id="label"></div>
+<p>
+</p>
+</body>
+</html>
+
+<script>
+var today = new Date()
+,   year = today.getFullYear()
+,   month = today.getMonth() + 1
+,   finalDay = new Date(year,month,0).getDate();
+var tb = $('<table />')
+,   divLabel = $('<label />')
+,   btnDown = $('<input />')
+,   labelShow = $('<label />')
+,   btnUp = $('<input />');
+
+btnDown.attr('type', 'button');
+btnDown.val('上');
+btnUp.attr('type', 'button');
+btnUp.val('下');
+labelShow.css({'background':'pink', 'padding':'5px', 'border-radius':'10px'})
+labelShow.html(year + '年' + month +'月');
+
+$(document.body).append(divLabel);
+$(divLabel).append(btnDown);
+$(divLabel).append(labelShow);
+$(divLabel).append(btnUp);
+$(divLabel).append(tb);
+
+btnDown.click(function() {   
+    month--;
+    if(month === 0){
+        month = 12;
+        year--;
+    }
+    finalDay = new Date(year,month,0).getDate(); 
+    createCalender(finalDay);
+    labelShow.html(year + '年' + month +'月');
+});
+
+btnUp.click(function() {
+    month++;
+    if(month === 13){
+        month = 1;
+        year++;
+    }
+    finalDay = new Date(year,month,0).getDate(); 
+    createCalender(finalDay);
+    labelShow.html(year + '年' + month +'月');
+});
+function createCalender(final) { 
+    tb.html(''); //清空table
+    var tr = $('<tr />') //畫week
+    ,   aryTrans = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    ,   aryWeek = ['1','2','3','4','5','6']
+    ,   date = 1;
+    $(tb).append(tr);
+    $.each(aryTrans, function(index, value){//每欄每欄畫
+      var td = $('<td />');  
+      td.html(value);
+      td.css({'width':'30px', 'height':'30px', 'text-align':'center'});
+      $(tr).append(td);
+    })
+    function dateCount(td){
+        td.html(date);
+        date++;//日期++
+        td.css('background', (year === today.getFullYear() && month === today.getMonth() + 1 && today.getDate()+1 === date) ? 'red' : 'gray');
+    }     
+    $.each(aryWeek, function(index, value){
+        var tr = $('<tr />');
+        $(tb).append(tr);
+        $.each(aryTrans, function(indexCell, valueCell){
+            var td = $('<td />')
+            ,   first = new Date(year,month-1,date-1).getDay(); 
+            $(tr).append(td);
+            td.css({'width':'30px', 'height':'30px', 'background':'#CCCCCC', 'text-align':'center', 'border-radius':'5px 10px'});            
+            if (index+1 === 1) //判斷第一周
+                (indexCell <= first) ? td.html('') : dateCount(td);                     
+            else if(index+1 === 6 || index+1 === 5) //判斷最後一周
+                (date <= final) ? (dateCount(td)) : td.html('');            
+            else 
+                dateCount(td);            
+        });
+    });
+}
+createCalender(finalDay);
+</script>
