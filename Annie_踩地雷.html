@@ -1,0 +1,234 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>踩地雷</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+</body>
+</html>
+
+<script>
+var pHight = document.createElement('p')
+    , pWidth = document.createElement('p')
+    , pStart = document.createElement('p');
+
+var labelHeight = document.createElement('label')
+    ,txtHeight = document.createElement('input')
+    ,labelWidth = document.createElement('label')
+    ,txtWidth = document.createElement('input')
+    , btnStart = document.createElement('input');
+
+labelHeight.innerHTML = '輸入長 : ';
+txtHeight.type = 'text';
+labelWidth.innerHTML = '輸入寬 : ';
+txtWidth.type = 'text';
+btnStart.type = 'button';
+btnStart.value = '開始';
+btnStart.style.width = '50px'
+
+var tb = document.createElement('table') //產生一個table
+    , div = document.createElement('div')
+    , intRow = 0
+    , intCell= 0
+    , intMineCount = 0 //地雷數量設宣告
+	, aryAll = []
+    , aryCompare = [];
+
+var blWin = true;
+btnStart.onclick = function(){ //按鍵點擊事件
+    intRow = parseInt(txtHeight.value) || parseInt(txtWidth.value);
+    intCell = parseInt(txtWidth.value) || parseInt(txtHeight.value);
+    intMineCount = Math.ceil(intRow*intCell)/10; //地雷數量設宣告
+    CreateTB(tb, intRow, intCell, intMineCount); //產生table
+    txtHeight.value = ''; //初始化輸入值
+    txtWidth.value = ''; // 初始化輸入值
+}
+
+document.body.appendChild(div);
+div.appendChild(pHight), div.appendChild(pWidth), div.appendChild(pStart);
+pHight.appendChild(labelHeight), pHight.appendChild(txtHeight);
+pWidth.appendChild(labelWidth), pWidth.appendChild(txtWidth);
+pStart.appendChild(btnStart);
+div.appendChild(tb);
+
+var SetMine = function(intMine, Row, Cell){ //定位地雷
+    var aryAns = []
+	, aryRed = [];
+    for(var intCount = 0 ; intCount < intMine;){
+        var first = Math.floor((Math.random()*Row)+1) // 隨機產生
+            , second = Math.floor((Math.random()*Cell)+1)
+            , strId = first + "-" + second;
+        if(aryAns.indexOf(strId) < 0){ 
+            intCount++;
+            aryAns = aryAns + ', ' + strId; 
+			aryRed.push(strId);
+            console.log(strId);
+            //document.getElementById(strId).style.background = "red";
+            document.getElementById(strId).innerHTML ='';
+        }
+    }
+    GetTxt(aryAns, Row, Cell);
+    GetClick(aryAns, intRow, intCell, aryRed);
+}
+, GetTxt = function(ary, Row, Cell){
+    for(var intCount=1 ; intCount <= Row ; intCount++){
+        for(var intValue=1 ; intValue <= Cell ; intValue++){
+			var obj = {};
+			obj.ID = intCount + '-' + intValue;
+            obj.mine = 0; //初始化為零
+            obj.show = false; //定義是否顯示過
+            obj.count = 0; //定義按右鍵的次數
+            if(ary.indexOf(obj.ID) < 0){ //如果strId不是地雷
+                if(ary.indexOf((intCount-1) + '-' + intValue) > 0)//如果上面是地雷
+                    obj.mine++;
+                if(ary.indexOf((intCount+1) + '-' + intValue) > 0) //如果下面是地雷
+                    obj.mine++;
+                if(ary.indexOf(intCount + '-' + (intValue+1)) > 0) //如果左是地雷
+                    obj.mine++;
+                if(ary.indexOf(intCount + '-' + (intValue-1)) > 0) //如果右是地雷
+                    obj.mine++;
+                if(ary.indexOf((intCount-1) + '-' + (intValue-1)) > 0)//如果上左面是地雷
+                    obj.mine++;
+                if(ary.indexOf((intCount+1) + '-' + (intValue-1)) > 0) //如果下左面是地雷
+                    obj.mine++;
+                if(ary.indexOf((intCount-1) + '-' + (intValue+1)) > 0) //如果上右是地雷
+                    obj.mine++;
+                if(ary.indexOf((intCount+1) + '-' + (intValue+1)) > 0) //如果下右是地雷
+                    obj.mine++;
+            }
+			aryAll.push(obj);
+        }
+    }
+}
+, GetMine = function(ary, obj){
+    var strId = obj.ID;
+    var intBomb = obj.mine;
+    if(intBomb === 0){
+        var i = parseInt(strId.charAt(0));
+        var j = parseInt(strId.charAt(2));
+        for(var intCount = i-1;intCount<=i+1;intCount++){
+            for(var intValue = j-1;intValue<=j+1;intValue++){
+                var strForId = intCount + '-' + intValue;
+                var a=document.getElementById(strForId);
+                aryAll.forEach(function(val){ //找aryAll中的每一個值
+                    if(val.ID === strForId && a  && intBomb === 0 && (!val.show) && ary.indexOf(strForId) < 0){ //找到相對應的obj
+                        val.show = true;
+                        GetMine(ary, val);  //再執行一次
+                    }
+                })
+            }
+        }
+    }
+    else if(intBomb > 0){
+        document.getElementById(strId).innerHTML = intBomb;
+    }
+    document.getElementById(obj.ID).style.background = 'orange';
+}
+, GetClick = function (ary, Row,Cell,Red){
+    aryAll.forEach(function(obj){ //依序每一個
+    	var strId = obj.ID;
+    	if(ary.indexOf(strId) < 0 ){ //如果strId不是地雷
+    		document.getElementById(strId).onclick = function(){
+                obj.show=true;
+    			GetMine(ary, obj);
+                blWin=true;
+                GetWin(ary, Row,Cell,Red);
+    		}
+            document.getElementById(strId).oncontextmenu = function(){
+                true;
+            }
+    	}
+    	else { //如果炸彈被點到
+    		document.getElementById(strId).onclick = function(){
+                aryAll.forEach(function(obj){
+                    if(Red.indexOf(obj.ID) < 0){
+                        console.log('a');
+                        document.getElementById(obj.ID).innerHTML = obj.mine;
+                        document.getElementById(obj.ID).style.background = 'orange';
+                    }   
+                    else{
+                        document.getElementById(obj.ID).style.background = 'red';
+                    }                 
+                })
+    			alert('你死了!');
+    		}
+    	}
+        document.getElementById(strId).oncontextmenu = function(){ //點右鍵執行funcution           
+            obj.count++; //點擊一次
+            if(!obj.show){ //如果沒被顯示過則執行
+                document.getElementById(strId).style.background = 'blue'; //標示為棋子: 變色
+                obj.show = true; //show改為true
+                document.getElementById(strId).onclick = function(){ 
+                    true; //按左鍵功能取消
+                }
+            }
+            else if(obj.count % 2 === 0 ){ //如果點擊次數為偶數
+                document.getElementById(strId).style.background = 'gray';
+                obj.show = false;
+                document.getElementById(strId).onclick = function(){ //按左鍵功能恢復
+                    obj.show=true; 
+                    GetMine(ary, obj);
+                }
+            }
+        }
+    })
+}
+, GetWin = function(ary, Row,Cell,Red){
+    //1. 如果除了炸彈，其他都是show則成功。
+    //2. 全部都是show，且炸彈為藍色，其他為非藍色則成功。
+    var blOut = false;
+    aryAll.forEach(function(obj){ 
+        if(Red.indexOf(obj.ID) < 0 && !obj.show ){ 
+            console.log(blWin); 
+            if(document.getElementById(obj.ID).style.background === 'blue'){
+               return blWin = false;  
+            }
+            return blWin = false; 
+        }
+        else if(Red.indexOf(obj.ID) > 0 && obj.show){
+            Red.forEach(function(val){
+                if(document.getElementById(val).style.background !== 'blue'){
+                    return blWin = false; 
+                }
+            })
+        }
+        else {
+            return blOut = true;
+        }
+    })
+    if(!blOut){
+        Red.forEach(function(val){
+            document.getElementById(val).style.background = 'red';
+        })
+        aryAll.forEach(function(obj){
+            document.getElementById(obj.ID).innerHTML = obj.mine;
+        })
+        alert('Winner^口^!!');
+    }
+    if(blWin) 
+    {
+        Red.forEach(function(val){
+            document.getElementById(val).style.background = 'red';
+        })
+        alert('Winner^口^!!');
+    }
+}
+, CreateTB = function(tb, Row, Cell, intMine){ //產生一個table
+    tb.innerHTML = ''; //table清空;
+    for(var intCount=1 ; intCount <= Row ; intCount++){
+        var tr = document.createElement('tr');
+        tb.appendChild(tr); 
+        for(var intValue=1 ; intValue <= Cell ; intValue++){
+            var td = document.createElement('td'); 
+            td.id = intCount + "-" + intValue; //設定id
+            tr.appendChild(td);			
+        }
+    }
+	SetMine(intMine, Row, Cell); //找出地雷區 
+};
+
+document.oncontextmenu = function(){
+    window.event.returnValue=false; //將滑鼠右鍵事件取消
+}
+</script>
